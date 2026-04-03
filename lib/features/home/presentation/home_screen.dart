@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/widgets/app_scaffold.dart';
+import 'package:tripwise/shared/widgets/app_scaffold.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,9 +31,9 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add),
-            label: const Text('Create a trip'),
+            onPressed: () => context.go('/fuel-cost'),
+            icon: const Icon(Icons.local_gas_station_outlined),
+            label: const Text('Fuel cost calculator'),
           ),
         ],
       ),

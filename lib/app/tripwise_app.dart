@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'router/app_router.dart';
-import 'theme/app_theme.dart';
+import 'package:tripwise/app/router/app_router.dart';
+import 'package:tripwise/app/theme/app_theme.dart';
 
 class TripwiseApp extends StatelessWidget {
   const TripwiseApp({super.key});
