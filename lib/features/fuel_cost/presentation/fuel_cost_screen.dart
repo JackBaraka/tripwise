@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import 'package:tripwise/shared/widgets/app_scaffold.dart';
+import 'package:tripwise/app/design/app_spacing.dart';
+ 
 
 class FuelCostScreen extends StatefulWidget {
   const FuelCostScreen({super.key});
@@ -54,105 +56,194 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: 'Fuel cost',
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          children: [
-            Text(
-              'Trip fuel cost calculator',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _distanceKmController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Distance (km)',
-                hintText: 'e.g. 250',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) =>
-                  _parsePositiveDouble(value) == null ? 'Enter a valid distance.' : null,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _consumptionKmPerLController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Fuel consumption (km/l)',
-                hintText: 'e.g. 14.5',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => _parsePositiveDouble(value) == null
-                  ? 'Enter a valid consumption.'
-                  : null,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _fuelPricePerLController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Fuel price (per litre)',
-                hintText: 'e.g. 1.65',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) =>
-                  _parsePositiveDouble(value) == null ? 'Enter a valid price.' : null,
-              onFieldSubmitted: (_) => _calculate(),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _calculate,
-              child: const Text('Calculate'),
-            ),
-            const SizedBox(height: 16),
-            if (_fuelNeededL != null && _totalCost != null)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Results',
-                        style: Theme.of(context).textTheme.titleMedium,
+    final scheme = Theme.of(context).colorScheme;
+
+    return Form(
+      key: _formKey,
+      child: ListView(
+        children: [
+          const SizedBox(height: AppSpacing.sm),
+          Text('Fuel cost', style: Theme.of(context).textTheme.displayLarge),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Enter your trip details to estimate litres needed and total cost.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Inputs', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _distanceKmController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Distance (km)',
+                      hintText: 'e.g. 250',
+                      prefixIcon: Icon(
+                        PhosphorIcons.roadHorizon(PhosphorIconsStyle.regular),
                       ),
-                      const SizedBox(height: 12),
-                      _ResultRow(
-                        label: 'Fuel needed',
-                        value: '${_fuelNeededL!.toStringAsFixed(2)} L',
-                      ),
-                      const SizedBox(height: 8),
-                      _ResultRow(
-                        label: 'Total cost',
-                        value: _totalCost!.toStringAsFixed(2),
-                      ),
-                    ],
+                    ),
+                    validator: (value) => _parsePositiveDouble(value) == null
+                        ? 'Enter a valid distance.'
+                        : null,
+                    textInputAction: TextInputAction.next,
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _consumptionKmPerLController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Fuel consumption (km/l)',
+                      hintText: 'e.g. 14.5',
+                      prefixIcon: Icon(
+                        PhosphorIcons.gauge(PhosphorIconsStyle.regular),
+                      ),
+                    ),
+                    validator: (value) => _parsePositiveDouble(value) == null
+                        ? 'Enter a valid consumption.'
+                        : null,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _fuelPricePerLController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Fuel price (per litre)',
+                      hintText: 'e.g. 1.65',
+                      prefixIcon: Icon(
+                        PhosphorIcons.currencyCircleDollar(
+                          PhosphorIconsStyle.regular,
+                        ),
+                      ),
+                    ),
+                    validator: (value) => _parsePositiveDouble(value) == null
+                        ? 'Enter a valid price.'
+                        : null,
+                    onFieldSubmitted: (_) => _calculate(),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  FilledButton.icon(
+                    onPressed: _calculate,
+                    icon: Icon(PhosphorIcons.equals(PhosphorIconsStyle.bold)),
+                    label: const Text('Calculate'),
+                  ),
+                ],
               ),
-          ],
-        ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: (_fuelNeededL != null && _totalCost != null)
+                ? Card(
+                    key: const ValueKey('results'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Results',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          _ResultRow(
+                            label: 'Fuel needed',
+                            value: '${_fuelNeededL!.toStringAsFixed(2)} L',
+                            icon: PhosphorIcons.drop(PhosphorIconsStyle.fill),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          _ResultRow(
+                            label: 'Total cost',
+                            value: _totalCost!.toStringAsFixed(2),
+                            icon: PhosphorIcons.receipt(PhosphorIconsStyle.fill),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Divider(color: scheme.outlineVariant.withAlpha(153)),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Tip: Save your theme preference in Settings.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Card(
+                    key: const ValueKey('empty'),
+                    color: scheme.surfaceContainerHighest,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withAlpha(31),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              PhosphorIcons.lightning(PhosphorIconsStyle.fill),
+                              color: scheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Text(
+                              'Fill the inputs and tap Calculate to see results.',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
       ),
     );
   }
 }
 
 class _ResultRow extends StatelessWidget {
-  const _ResultRow({required this.label, required this.value});
+  const _ResultRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   final String label;
   final String value;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
-        Expanded(child: Text(label)),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: scheme.primary.withAlpha(31),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: scheme.primary),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium)),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium,
