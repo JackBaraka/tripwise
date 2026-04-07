@@ -32,28 +32,34 @@ class TripsListState {
   }
 }
 
-/// Trips list notifier
-class TripsListNotifier extends StateNotifier<TripsListState> {
-  final TripsRepository _repository;
-
-  TripsListNotifier(this._repository) : super(const TripsListState()) {
-    loadTrips();
+/// Trips list notifier using Riverpod 3.x Notifier
+class TripsListNotifier extends Notifier<TripsListState> {
+  @override
+  TripsListState build() {
+    _loadTrips();
+    return const TripsListState();
   }
 
-  Future<void> loadTrips() async {
+  Future<void> _loadTrips() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final trips = await _repository.loadTrips();
+      final repository = ref.read(tripsRepositoryProvider);
+      final trips = await repository.loadTrips();
       state = state.copyWith(trips: trips, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
+  Future<void> loadTrips() async {
+    await _loadTrips();
+  }
+
   Future<void> saveTrip(Trip trip) async {
     try {
-      await _repository.saveTrip(trip);
-      await loadTrips();
+      final repository = ref.read(tripsRepositoryProvider);
+      await repository.saveTrip(trip);
+      await _loadTrips();
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
@@ -61,8 +67,9 @@ class TripsListNotifier extends StateNotifier<TripsListState> {
 
   Future<void> deleteTrip(String tripId) async {
     try {
-      await _repository.deleteTrip(tripId);
-      await loadTrips();
+      final repository = ref.read(tripsRepositoryProvider);
+      await repository.deleteTrip(tripId);
+      await _loadTrips();
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
@@ -71,10 +78,7 @@ class TripsListNotifier extends StateNotifier<TripsListState> {
 
 /// Main trips provider
 final tripsListProvider =
-    StateNotifierProvider<TripsListNotifier, TripsListState>((ref) {
-  final repository = ref.watch(tripsRepositoryProvider);
-  return TripsListNotifier(repository);
-});
+    NotifierProvider<TripsListNotifier, TripsListState>(TripsListNotifier.new);
 
 /// Single trip provider by ID
 final tripByIdProvider = Provider.family<Trip?, String>((ref, tripId) {
