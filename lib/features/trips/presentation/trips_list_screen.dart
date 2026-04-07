@@ -45,7 +45,7 @@ class _TripsListScreenState extends State<TripsListScreen> {
           future: _tripsFuture,
           builder: (context, snapshot) {
             return ListView(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              padding: const EdgeInsets.all(AppSpacing.md),
               children: [
                 const SizedBox(height: AppSpacing.sm),
                 Text(
@@ -66,7 +66,7 @@ class _TripsListScreenState extends State<TripsListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/fuel-cost'),
-        child: const Icon(PhosphorIcons.plus()),
+        child: Icon(PhosphorIcons.plus()),
       ),
     );
   }
