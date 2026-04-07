@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:tripwise/app/design/app_spacing.dart';
 import 'package:tripwise/features/trips/data/trip_model.dart';
 import 'package:tripwise/shared/providers/trips_provider.dart';
+import 'package:tripwise/shared/utils/currency_formatter.dart';
 
 class TripsListScreen extends ConsumerWidget {
   const TripsListScreen({super.key});
@@ -152,7 +153,7 @@ class _TripCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  String get _formatCurrency => '\$${trip.totalCost.toStringAsFixed(2)}';
+  String get _formatCurrency => CurrencyFormatter.formatKES(trip.totalCost);
 
   @override
   Widget build(BuildContext context) {

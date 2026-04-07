@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:tripwise/app/design/app_spacing.dart';
 import 'package:tripwise/features/trips/data/trip_model.dart';
 import 'package:tripwise/shared/providers/trips_provider.dart';
+import 'package:tripwise/shared/utils/currency_formatter.dart';
 
 class FuelCostScreen extends ConsumerStatefulWidget {
   const FuelCostScreen({super.key});
@@ -316,13 +317,13 @@ class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
                           const SizedBox(height: AppSpacing.sm),
                           _ResultRow(
                             label: 'Fuel cost',
-                            value: '\$${_fuelCost!.toStringAsFixed(2)}',
+                            value: CurrencyFormatter.formatKES(_fuelCost!),
                             icon: PhosphorIcons.gasPump(PhosphorIconsStyle.fill),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           _ResultRow(
                             label: 'Total cost',
-                            value: '\$${_totalCost!.toStringAsFixed(2)}',
+                            value: CurrencyFormatter.formatKES(_totalCost!),
                             icon: PhosphorIcons.receipt(PhosphorIconsStyle.fill),
                           ),
                           const SizedBox(height: AppSpacing.lg),

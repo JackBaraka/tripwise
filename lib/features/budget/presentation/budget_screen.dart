@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:tripwise/app/design/app_spacing.dart';
 import 'package:tripwise/shared/providers/trips_provider.dart';
+import 'package:tripwise/shared/utils/currency_formatter.dart';
 
 class BudgetScreen extends ConsumerWidget {
   final String tripId;
@@ -100,7 +101,7 @@ class BudgetScreen extends ConsumerWidget {
                               ),
                         ),
                         Text(
-                          '\$${trip.totalCost.toStringAsFixed(2)}',
+                          CurrencyFormatter.formatKES(trip.totalCost),
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: scheme.onPrimaryContainer,
                                 fontWeight: FontWeight.bold,
@@ -255,7 +256,7 @@ class _CostItem extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$${amount.toStringAsFixed(2)}',
+                  CurrencyFormatter.formatKES(amount),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
