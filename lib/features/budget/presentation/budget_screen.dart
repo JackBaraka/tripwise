@@ -76,7 +76,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
     return Scaffold(
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -169,7 +169,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
           if (trip.tollsCost != null && trip.tollsCost! > 0)
             _CostItem(
-              icon: PhosphorIcons.barrier(PhosphorIconsStyle.fill),
+              icon: PhosphorIcons.sign(PhosphorIconsStyle.fill),
               label: 'Tolls',
               amount: trip.tollsCost!,
               percentage: (trip.tollsCost! / trip.totalCost * 100),
