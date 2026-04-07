@@ -218,7 +218,7 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
                         labelText: 'Tolls (optional)',
                         hintText: 'e.g. 25',
                         prefixIcon: Icon(
-                          PhosphorIcons.sign(PhosphorIconsStyle.regular),
+                          PhosphorIcons.warningCircle(PhosphorIconsStyle.regular),
                         ),
                       ),
                     ),
