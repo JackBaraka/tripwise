@@ -77,13 +77,6 @@ class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
-    if (_tripNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a trip name')),
-      );
-      return;
-    }
-
     final trip = Trip(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: _tripNameController.text.trim(),
@@ -140,7 +133,17 @@ class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
                         PhosphorIcons.mapPin(PhosphorIconsStyle.regular),
                       ),
                     ),
+                    textCapitalization: TextCapitalization.words,
                     textInputAction: TextInputAction.next,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a trip name';
+                      }
+                      if (value.trim().length < 2) {
+                        return 'Name must be at least 2 characters';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text('Inputs', style: Theme.of(context).textTheme.titleMedium),
@@ -156,9 +159,19 @@ class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
                         PhosphorIcons.roadHorizon(PhosphorIconsStyle.regular),
                       ),
                     ),
-                    validator: (value) => _parsePositiveDouble(value) == null
-                        ? 'Enter a valid distance.'
-                        : null,
+                    validator: (value) {
+                      final parsed = _parsePositiveDouble(value);
+                      if (parsed == null) {
+                        return 'Enter a valid distance';
+                      }
+                      if (parsed < 1) {
+                        return 'Distance must be at least 1 km';
+                      }
+                      if (parsed > 50000) {
+                        return 'Distance cannot exceed 50,000 km';
+                      }
+                      return null;
+                    },
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -173,9 +186,19 @@ class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
                         PhosphorIcons.gauge(PhosphorIconsStyle.regular),
                       ),
                     ),
-                    validator: (value) => _parsePositiveDouble(value) == null
-                        ? 'Enter a valid consumption.'
-                        : null,
+                    validator: (value) {
+                      final parsed = _parsePositiveDouble(value);
+                      if (parsed == null) {
+                        return 'Enter a valid consumption';
+                      }
+                      if (parsed < 1) {
+                        return 'Consumption must be at least 1 km/l';
+                      }
+                      if (parsed > 100) {
+                        return 'Consumption cannot exceed 100 km/l';
+                      }
+                      return null;
+                    },
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -192,9 +215,19 @@ class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
                         ),
                       ),
                     ),
-                    validator: (value) => _parsePositiveDouble(value) == null
-                        ? 'Enter a valid price.'
-                        : null,
+                    validator: (value) {
+                      final parsed = _parsePositiveDouble(value);
+                      if (parsed == null) {
+                        return 'Enter a valid price';
+                      }
+                      if (parsed < 0.01) {
+                        return 'Price must be at least 0.01';
+                      }
+                      if (parsed > 20) {
+                        return 'Price cannot exceed 20 per litre';
+                      }
+                      return null;
+                    },
                     onFieldSubmitted: (_) => _calculate(),
                   ),
                   const SizedBox(height: AppSpacing.md),
