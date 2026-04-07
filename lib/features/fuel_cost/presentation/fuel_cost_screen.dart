@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:tripwise/app/design/app_spacing.dart';
 import 'package:tripwise/features/trips/data/trip_model.dart';
-import 'package:tripwise/features/trips/data/trips_repository.dart';
+import 'package:tripwise/shared/providers/trips_provider.dart';
 
-class FuelCostScreen extends StatefulWidget {
+class FuelCostScreen extends ConsumerStatefulWidget {
   const FuelCostScreen({super.key});
 
   @override
-  State<FuelCostScreen> createState() => _FuelCostScreenState();
+  ConsumerState<FuelCostScreen> createState() => _FuelCostScreenState();
 }
 
-class _FuelCostScreenState extends State<FuelCostScreen> {
+class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _repository = TripsRepository();
 
   final _tripNameController = TextEditingController();
   final _distanceKmController = TextEditingController();
@@ -96,7 +96,7 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
       createdAt: DateTime.now(),
     );
 
-    await _repository.saveTrip(trip);
+    await ref.read(tripsListProvider.notifier).saveTrip(trip);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

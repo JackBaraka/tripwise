@@ -1,55 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:tripwise/app/design/app_spacing.dart';
-import 'package:tripwise/features/trips/data/trip_model.dart';
-import 'package:tripwise/features/trips/data/trips_repository.dart';
+import 'package:tripwise/shared/providers/trips_provider.dart';
 
-class BudgetScreen extends StatefulWidget {
+class BudgetScreen extends ConsumerWidget {
   final String tripId;
 
   const BudgetScreen({super.key, required this.tripId});
 
   @override
-  State<BudgetScreen> createState() => _BudgetScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trip = ref.watch(tripByIdProvider(tripId));
 
-class _BudgetScreenState extends State<BudgetScreen> {
-  final _repository = TripsRepository();
-  Trip? _trip;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTrip();
-  }
-
-  Future<void> _loadTrip() async {
-    final trips = await _repository.loadTrips();
-    final trip = trips.firstWhere(
-      (t) => t.id == widget.tripId,
-      orElse: () => throw Exception('Trip not found'),
-    );
-    setState(() {
-      _trip = trip;
-      _isLoading = false;
-    });
-  }
-
-  String _formatCurrency(double value) {
-    return '\$${value.toStringAsFixed(2)}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_trip == null) {
+    if (trip == null) {
       return Scaffold(
         body: Center(
           child: Column(
@@ -71,7 +36,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
       );
     }
 
-    final trip = _trip!;
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -136,7 +100,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                               ),
                         ),
                         Text(
-                          _formatCurrency(trip.totalCost),
+                          '\$${trip.totalCost.toStringAsFixed(2)}',
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: scheme.onPrimaryContainer,
                                 fontWeight: FontWeight.bold,

@@ -1,67 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:tripwise/app/design/app_spacing.dart';
 import 'package:tripwise/features/trips/data/trip_model.dart';
-import 'package:tripwise/features/trips/data/trips_repository.dart';
+import 'package:tripwise/shared/providers/trips_provider.dart';
 
-class TripsListScreen extends StatefulWidget {
+class TripsListScreen extends ConsumerWidget {
   const TripsListScreen({super.key});
 
   @override
-  State<TripsListScreen> createState() => _TripsListScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tripsState = ref.watch(tripsListProvider);
 
-class _TripsListScreenState extends State<TripsListScreen> {
-  final _repository = TripsRepository();
-  late Future<List<Trip>> _tripsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTrips();
-  }
-
-  void _loadTrips() {
-    _tripsFuture = _repository.loadTrips();
-  }
-
-  Future<void> _deleteTrip(Trip trip) async {
-    await _repository.deleteTrip(trip.id);
-    _loadTrips();
-    if (mounted) setState(() {});
-  }
-
-  String _formatCurrency(double value) {
-    return '\$${value.toStringAsFixed(2)}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: FutureBuilder<List<Trip>>(
-          future: _tripsFuture,
-          builder: (context, snapshot) {
-            return ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              children: [
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Saved Trips',
-                  style: Theme.of(context).textTheme.displayLarge,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Your saved trip plans.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _buildContent(snapshot),
-              ],
-            );
-          },
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          children: [
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Saved Trips',
+              style: Theme.of(context).textTheme.displayLarge,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Your saved trip plans.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _buildContent(context, ref, tripsState),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -71,16 +41,36 @@ class _TripsListScreenState extends State<TripsListScreen> {
     );
   }
 
-  Widget _buildContent(AsyncSnapshot<List<Trip>> snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
+  Widget _buildContent(BuildContext context, WidgetRef ref, TripsListState state) {
+    if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (snapshot.hasError) {
-      return Center(child: Text('Error: ${snapshot.error}'));
+    if (state.error != null) {
+      return Center(
+        child: Column(
+          children: [
+            Icon(
+              PhosphorIcons.warningCircle(PhosphorIconsStyle.regular),
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Failed to load trips',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            FilledButton.tonal(
+              onPressed: () => ref.read(tripsListProvider.notifier).loadTrips(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
     }
 
-    final trips = snapshot.data ?? [];
+    final trips = state.trips;
 
     if (trips.isEmpty) {
       return Center(
@@ -104,6 +94,12 @@ class _TripsListScreenState extends State<TripsListScreen> {
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                onPressed: () => context.go('/fuel-cost'),
+                icon: Icon(PhosphorIcons.plus()),
+                label: const Text('Plan a Trip'),
+              ),
             ],
           ),
         ),
@@ -112,11 +108,34 @@ class _TripsListScreenState extends State<TripsListScreen> {
 
     return Column(
       children: trips.map((trip) => _TripCard(
+        key: ValueKey(trip.id),
         trip: trip,
         onTap: () => context.go('/budget/${trip.id}'),
-        onDelete: () => _deleteTrip(trip),
-        formatCurrency: _formatCurrency,
+        onDelete: () => _showDeleteDialog(context, ref, trip),
       )).toList(),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, WidgetRef ref, Trip trip) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Trip'),
+        content: Text('Are you sure you want to delete "${trip.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              ref.read(tripsListProvider.notifier).deleteTrip(trip.id);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -125,14 +144,15 @@ class _TripCard extends StatelessWidget {
   final Trip trip;
   final VoidCallback onTap;
   final VoidCallback onDelete;
-  final String Function(double) formatCurrency;
 
   const _TripCard({
+    super.key,
     required this.trip,
     required this.onTap,
     required this.onDelete,
-    required this.formatCurrency,
   });
+
+  String get _formatCurrency => '\$${trip.totalCost.toStringAsFixed(2)}';
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +214,7 @@ class _TripCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     Text(
-                      formatCurrency(trip.totalCost),
+                      _formatCurrency,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: scheme.onPrimaryContainer,
                             fontWeight: FontWeight.bold,
