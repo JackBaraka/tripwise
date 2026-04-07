@@ -169,7 +169,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
           if (trip.tollsCost != null && trip.tollsCost! > 0)
             _CostItem(
-              icon: PhosphorIcons.sign(PhosphorIconsStyle.fill),
+              icon: PhosphorIcons.warningCircle(PhosphorIconsStyle.fill),
               label: 'Tolls',
               amount: trip.tollsCost!,
               percentage: (trip.tollsCost! / trip.totalCost * 100),
