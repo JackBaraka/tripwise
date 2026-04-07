@@ -14,14 +14,17 @@ class AppShell extends ConsumerWidget {
 
   int _indexForLocation(String location) {
     if (location.startsWith('/fuel-cost')) return 1;
-    if (location.startsWith('/settings')) return 2;
+    if (location.startsWith('/trips')) return 2;
+    if (location.startsWith('/budget')) return 2;
+    if (location.startsWith('/settings')) return 3;
     return 0;
   }
 
   String _locationForIndex(int index) {
     return switch (index) {
       1 => '/fuel-cost',
-      2 => '/settings',
+      2 => '/trips',
+      3 => '/settings',
       _ => '/',
     };
   }
@@ -68,6 +71,12 @@ class AppShell extends ConsumerWidget {
                   label: 'Calculator',
                 ),
                 NavigationDestination(
+                  icon: Icon(PhosphorIcons.mapTrifold(PhosphorIconsStyle.regular)),
+                  selectedIcon:
+                      Icon(PhosphorIcons.mapTrifold(PhosphorIconsStyle.fill)),
+                  label: 'Trips',
+                ),
+                NavigationDestination(
                   icon: Icon(PhosphorIcons.gear(PhosphorIconsStyle.regular)),
                   selectedIcon:
                       Icon(PhosphorIcons.gear(PhosphorIconsStyle.fill)),
@@ -78,16 +87,16 @@ class AppShell extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: index == 1
+      floatingActionButton: index == 0
           ? FloatingActionButton.extended(
-              onPressed: () {},
+              onPressed: () => context.go('/trips'),
               backgroundColor: scheme.primary,
               foregroundColor: scheme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              icon: Icon(PhosphorIcons.sparkle(PhosphorIconsStyle.fill)),
-              label: const Text('Tips'),
+              icon: Icon(PhosphorIcons.mapTrifold(PhosphorIconsStyle.fill)),
+              label: const Text('My Trips'),
             )
           : null,
       appBar: AppBar(

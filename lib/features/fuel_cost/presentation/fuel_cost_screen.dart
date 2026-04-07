@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:tripwise/app/design/app_spacing.dart';
- 
+import 'package:tripwise/features/trips/data/trip_model.dart';
+import 'package:tripwise/features/trips/data/trips_repository.dart';
 
 class FuelCostScreen extends StatefulWidget {
   const FuelCostScreen({super.key});
@@ -13,19 +15,30 @@ class FuelCostScreen extends StatefulWidget {
 
 class _FuelCostScreenState extends State<FuelCostScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _repository = TripsRepository();
 
+  final _tripNameController = TextEditingController();
   final _distanceKmController = TextEditingController();
   final _consumptionKmPerLController = TextEditingController();
   final _fuelPricePerLController = TextEditingController();
+  final _tollsController = TextEditingController();
+  final _foodController = TextEditingController();
+  final _lodgingController = TextEditingController();
 
   double? _fuelNeededL;
+  double? _fuelCost;
   double? _totalCost;
+  bool _showAdditionalCosts = false;
 
   @override
   void dispose() {
+    _tripNameController.dispose();
     _distanceKmController.dispose();
     _consumptionKmPerLController.dispose();
     _fuelPricePerLController.dispose();
+    _tollsController.dispose();
+    _foodController.dispose();
+    _lodgingController.dispose();
     super.dispose();
   }
 
@@ -33,7 +46,7 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
     final normalized = (raw ?? '').trim().replaceAll(',', '.');
     if (normalized.isEmpty) return null;
     final value = double.tryParse(normalized);
-    if (value == null || value <= 0) return null;
+    if (value == null || value < 0) return null;
     return value;
   }
 
@@ -42,16 +55,55 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
     if (!isValid) return;
 
     final distanceKm = _parsePositiveDouble(_distanceKmController.text)!;
-    final consumptionKmPerL = _parsePositiveDouble(_consumptionKmPerLController.text)!;
+    final consumptionKmPerL =
+        _parsePositiveDouble(_consumptionKmPerLController.text)!;
     final pricePerL = _parsePositiveDouble(_fuelPricePerLController.text)!;
+    final tolls = _parsePositiveDouble(_tollsController.text) ?? 0;
+    final food = _parsePositiveDouble(_foodController.text) ?? 0;
+    final lodging = _parsePositiveDouble(_lodgingController.text) ?? 0;
 
     final fuelNeededL = distanceKm / consumptionKmPerL;
-    final totalCost = fuelNeededL * pricePerL;
+    final fuelCost = fuelNeededL * pricePerL;
+    final totalCost = fuelCost + tolls + food + lodging;
 
     setState(() {
       _fuelNeededL = fuelNeededL;
+      _fuelCost = fuelCost;
       _totalCost = totalCost;
     });
+  }
+
+  Future<void> _saveTrip() async {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+
+    if (_tripNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a trip name')),
+      );
+      return;
+    }
+
+    final trip = Trip(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: _tripNameController.text.trim(),
+      distanceKm: _parsePositiveDouble(_distanceKmController.text)!,
+      consumptionKmPerL: _parsePositiveDouble(_consumptionKmPerLController.text)!,
+      fuelPricePerL: _parsePositiveDouble(_fuelPricePerLController.text)!,
+      tollsCost: _parsePositiveDouble(_tollsController.text),
+      foodCost: _parsePositiveDouble(_foodController.text),
+      lodgingCost: _parsePositiveDouble(_lodgingController.text),
+      createdAt: DateTime.now(),
+    );
+
+    await _repository.saveTrip(trip);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Trip "${trip.name}" saved!')),
+      );
+      context.go('/trips');
+    }
   }
 
   @override
@@ -76,6 +128,21 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('Trip Details',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _tripNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Trip name',
+                      hintText: 'e.g. Summer Road Trip',
+                      prefixIcon: Icon(
+                        PhosphorIcons.mapPin(PhosphorIconsStyle.regular),
+                      ),
+                    ),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   Text('Inputs', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: AppSpacing.md),
                   TextFormField(
@@ -130,6 +197,58 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
                         : null,
                     onFieldSubmitted: (_) => _calculate(),
                   ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextButton.icon(
+                    onPressed: () =>
+                        setState(() => _showAdditionalCosts = !_showAdditionalCosts),
+                    icon: Icon(_showAdditionalCosts
+                        ? PhosphorIcons.caretUp(PhosphorIconsStyle.regular)
+                        : PhosphorIcons.caretDown(PhosphorIconsStyle.regular)),
+                    label: Text(_showAdditionalCosts
+                        ? 'Hide additional costs'
+                        : 'Add tolls, food, lodging'),
+                  ),
+                  if (_showAdditionalCosts) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _tollsController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Tolls (optional)',
+                        hintText: 'e.g. 25',
+                        prefixIcon: Icon(
+                          PhosphorIcons.barrier(PhosphorIconsStyle.regular),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _foodController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Food (optional)',
+                        hintText: 'e.g. 50',
+                        prefixIcon: Icon(
+                          PhosphorIcons.forkKnife(PhosphorIconsStyle.regular),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _lodgingController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Lodging (optional)',
+                        hintText: 'e.g. 120',
+                        prefixIcon: Icon(
+                          PhosphorIcons.bed(PhosphorIconsStyle.regular),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
                     onPressed: _calculate,
@@ -163,15 +282,30 @@ class _FuelCostScreenState extends State<FuelCostScreen> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           _ResultRow(
+                            label: 'Fuel cost',
+                            value: '\$${_fuelCost!.toStringAsFixed(2)}',
+                            icon: PhosphorIcons.gasPump(PhosphorIconsStyle.fill),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          _ResultRow(
                             label: 'Total cost',
-                            value: _totalCost!.toStringAsFixed(2),
+                            value: '\$${_totalCost!.toStringAsFixed(2)}',
                             icon: PhosphorIcons.receipt(PhosphorIconsStyle.fill),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: _saveTrip,
+                              icon: Icon(PhosphorIcons.floppyDisk(PhosphorIconsStyle.bold)),
+                              label: const Text('Save Trip'),
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           Divider(color: scheme.outlineVariant.withAlpha(153)),
                           const SizedBox(height: AppSpacing.md),
                           Text(
-                            'Tip: Save your theme preference in Settings.',
+                            'Tip: Add tolls, food, and lodging to see a full budget breakdown.',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
