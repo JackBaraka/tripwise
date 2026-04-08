@@ -224,8 +224,8 @@ class _FuelCostScreenState extends ConsumerState<FuelCostScreen> {
                       if (parsed < 0.01) {
                         return 'Price must be at least 0.01';
                       }
-                      if (parsed > 20) {
-                        return 'Price cannot exceed 20 per litre';
+                      if (parsed > 500) {
+                        return 'Price cannot exceed ksh 500 per litre';
                       }
                       return null;
                     },
